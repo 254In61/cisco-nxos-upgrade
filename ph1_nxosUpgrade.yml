@@ -1,0 +1,36 @@
+#!/usr/tools/pyenv/shims/ansible-playbook
+---
+#Ansible script for NXOS upload
+#This is just phase 1
+- name : NXOS UPLOAD
+  hosts: "all"
+  serial: 5
+  gather_facts: false
+
+  vars_prompt:
+    - name: sys_image
+      prompt: "NXOS system Image full name"
+      private: no
+
+    - name: size
+      prompt: "File size in mbps of the nxos system image"
+      private: no
+
+    - name: sys_md5
+      prompt: "NXOS system image MD5 value"
+      private: no
+
+    - name: kick_image
+      prompt: "Kickstart image full name[Press enter if none]"
+      private: no
+
+    - name: kick_md5
+      prompt: "Kickstart image MD5 value[Press enter if none]"
+      private: no
+
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: nxos
+
+  tasks:
+    - include: modules/upload_nxos.yml
