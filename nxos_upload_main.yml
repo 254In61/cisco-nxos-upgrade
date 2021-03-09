@@ -1,0 +1,35 @@
+# Code to upload nxos images to Nexus device and prepare for upgrade.
+# 3 Steps take place
+# STEP 1: Check file is present on TFTP server and obtain size & md5sum
+# STEP 2: Upload of file after perfoming checks like a) Image validity for model. b) Free memory size etc
+# STEP 3: Perfom image impact checks.
+
+- name : Upload nxos image to device
+  gather_facts: false
+  hosts: "all"
+
+  vars_files: creds.yml
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: nxos
+  
+  tasks:
+    - include_vars: modules/images.yml
+    - include: modules/nxos_upload_to_device.yml
+
+# Inventory hosts which complete upload before others,will close ssh channels as the others are still uploading.
+# New play will open new sockets on all inventory hosts incase any were closed.
+
+- name: Perfom image validation and impact checks
+  gather_facts: false
+  hosts: "all"
+
+  vars_files: creds.yml
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: nxos
+  
+  tasks:
+    - include_vars: modules/images.yml
+    - include: modules/nxos_impact_checks.yml 
+  

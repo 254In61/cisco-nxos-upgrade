@@ -1,0 +1,44 @@
+# Module that perfoms impact checks after ios images upload
+- name : Impact checks for System Image ONLY
+  block:
+    - name: Impact checks for System Image ONLY [ Skipping if Kickstart Image is used ][ Fail if impact checks fail ]
+      nxos_command:
+        commands: "show install all impact nxos bootflash:{{ system_image }}"
+      register: impact
+      failed_when: "'has failed' in impact['stdout'][0] "
+
+    - name: Check for any software incompatibilities 
+      nxos_command:
+        commands: "show incompatibility-all nxos bootflash:{{ system_image }}"
+      register: compatible
+      failed_when: "'No incompatible configurations' not in compatible['stdout'][0]"
+      
+    - debug:
+        msg: 'Impact checks successfull. Device ready for Upgrade & reload'
+    
+  vars:
+    ansible_command_timeout: 7200
+  when: kickstart_image == 'none'
+
+- name: Impact checks for System Image + Kickstart Image
+  block:
+    - name: Impact checks for System Image + Kickstart Image [ Skipping if Kickstart Image not used ][ Fail if impact checks fail ]
+      nxos_command:
+        commands: "show install all impact system bootflash:{{ system_image }} kickstart bootflash:{{ kickstart_image }}"
+      register: impact
+      failed_when: "'has failed' in impact['stdout'][0] "
+
+    - name: Check for any software incompatibilities 
+      nxos_command:
+        commands: "show incompatibility-all system bootflash:{{ system_image }}"
+      register: compatible
+      failed_when: "'No incompatible configurations' not in compatible['stdout'][0]"
+
+    - debug:
+        msg: 'Impact checks successfull. Device ready for Upgrade & reload'
+
+  vars:
+    ansible_command_timeout: 7200
+  when: kickstart_image != 'none'
+   
+  

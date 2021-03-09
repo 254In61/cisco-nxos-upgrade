@@ -1,0 +1,69 @@
+# Module to upload nxos image on device.
+- name: Obtain System Image file details [Fail if file not present]
+  stat:
+    path: "/home/source/upload/{{ system_image }}"
+    checksum_algorithm: md5
+  register: sysimage_stat
+  failed_when: sysimage_stat['stat']['exists'] != true
+  #delegate_to: localhost
+
+#- debug:
+    #var: sysimage_stat
+
+- name: Obtain kick-start image file details [Fail if file not present] [Skip if kickstart_image = 'none' ]
+  stat:
+    path: "/home/source/upload/{{ kickstart_image }}"
+    checksum_algorithm: md5
+  register: kickstart_stat
+  failed_when: kickstart_stat['stat']['exists'] != true
+  #delegate_to: localhost
+  when: kickstart_image != 'none'
+
+- name: Collect NXOS device facts
+  cisco.nxos.nxos_facts:
+    gather_subset: all
+    
+- debug:
+    msg:
+      - 'Current NXOS image ; {{ ansible_facts["net_image"] }}'
+      - 'Available Bootflash space ; {{ ansible_facts["net_memfree_mb"] }}'
+      - 'Image storage medium ; {{ ansible_facts["net_filesystems"][0] }}'
+
+- name: Check validity of nxos system Image [ Compare first 6 characters of current NXOS name and new IOS name ]
+  assert:
+    that: system_image[:6] in ansible_facts["net_image"]
+    fail_msg: "FAIL- New nxos Image invalid for device"
+    success_msg: "PASS - New nxos Image confirmed valid for device"
+
+- name: Check system_image == current NXOS [FAIL Out Device if image already used]
+  assert:
+    that: system_image not in ansible_facts["net_image"]
+    fail_msg: "System image already in use. Stopping checks on the device"
+    success_msg: "System image not used. Checks to continue"
+
+- name: Confirm device has enough free memory space in flash/bootflash
+  assert:
+    that: '{{ ansible_facts["net_memfree_mb"] }} > {{ sysimage_stat["stat"]["size"]|float * 0.000001  }}'
+    # Stat module outputs file size in bps and nxos_facts module outputs file-size in mbps
+    fail_msg: "FAIL - Not enough space available for upload"
+    success_msg: "PASS - Enough space available for upload"
+
+- name: Activate scp-server feature
+  nxos_config:
+    commands: feature scp-server
+
+- name: Upload system image file to device
+  net_put:
+    src: "/home/source/upload/{{ system_image }}"   #images folder to contain the image file.
+    dest: '{{ ansible_facts["net_filesystems"][0] }}{{ system_image }}'
+  vars:
+    ansible_command_timeout: 7200  # Increase upload time
+
+- name: Upload kickstart image file to device [Skip if no kick-start == 'none']
+  net_put:
+    src: "/home/source/upload/{{ kickstart_image }}"   #images folder to contain the image file.
+    dest: '{{ ansible_facts["net_filesystems"][0] }}{{ kickstart_image }}'
+  vars:
+    ansible_command_timeout: 7200  # Increase upload time
+  when: kickstart_image != 'none'
+

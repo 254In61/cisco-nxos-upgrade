@@ -1,0 +1,9 @@
+---
+#File containing images.
+# NB: Only edit the .bin image names only.Don't edit 'system_image' and 'kickstart_image' keywords!!
+# If NO kickstart image in use, save the value as 'none'
+# Example:
+# kickstart_image: none
+# NB: There has to be space between ":" and your .bin image name.
+system_image: n5000-uk9.7.3.8.N1.1.bin
+kickstart_image: n5000-uk9-kickstart.7.3.8.N1.1.bin
