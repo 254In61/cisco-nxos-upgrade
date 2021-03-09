@@ -1,0 +1,118 @@
+the_panther% ansible-playbook nxos_upload_main.yml
+
+PLAY [Upload nxos image to device] ************************************************************************************************************************************************
+
+TASK [include_vars] ***************************************************************************************************************************************************************
+ok: [panther-n5k01]
+ok: [panther-n5k02]
+
+TASK [Obtain System Image file details [Fail if file not present]] ****************************************************************************************************************
+ok: [panther-n5k02]
+ok: [panther-n5k01]
+
+TASK [Obtain kick-start image file details [Fail if file not present] [Skip if kickstart_image = 'none' ]] ************************************************************************
+ok: [panther-n5k01]
+ok: [panther-n5k02]
+
+TASK [Collect NXOS device facts] **************************************************************************************************************************************************
+ok: [panther-n5k01]
+ok: [panther-n5k02]
+
+TASK [debug] **********************************************************************************************************************************************************************
+ok: [panther-n5k01] => {
+    "msg": [
+        "Current NXOS image ; bootflash:///n5000-uk9.7.3.3.N1.1.bin",
+        "Available Bootflash space ; 6137.23828125",
+        "Image storage medium ; bootflash:"
+    ]
+}
+ok: [panther-n5k02] => {
+    "msg": [
+        "Current NXOS image ; bootflash:///n5000-uk9.7.3.3.N1.1.bin",
+        "Available Bootflash space ; 6137.39453125",
+        "Image storage medium ; bootflash:"
+    ]
+}
+
+TASK [Check validity of nxos system Image [ Compare first 6 characters of current NXOS name and new IOS name ]] *******************************************************************
+ok: [panther-n5k01] => {
+    "changed": false,
+    "msg": "PASS - New nxos Image confirmed valid for device"
+}
+ok: [panther-n5k02] => {
+    "changed": false,
+    "msg": "PASS - New nxos Image confirmed valid for device"
+}
+
+TASK [Check system_image == current NXOS [FAIL Out Device if image already used]] *************************************************************************************************
+ok: [panther-n5k01] => {
+    "changed": false,
+    "msg": "System image not used. Checks to continue"
+}
+ok: [panther-n5k02] => {
+    "changed": false,
+    "msg": "System image not used. Checks to continue"
+}
+
+TASK [Confirm device has enough free memory space in flash/bootflash] *************************************************************************************************************
+ok: [panther-n5k01] => {
+    "changed": false,
+    "msg": "PASS - Enough space available for upload"
+}
+ok: [panther-n5k02] => {
+    "changed": false,
+    "msg": "PASS - Enough space available for upload"
+}
+
+TASK [Activate scp-server feature] ************************************************************************************************************************************************
+[WARNING]: To ensure idempotency and correct diff the input configuration lines should be similar to how they appear if present in the running configuration on device
+ok: [panther-n5k01]
+changed: [panther-n5k02]
+
+TASK [Upload system image file to device] *****************************************************************************************************************************************
+changed: [panther-n5k01]
+changed: [panther-n5k02]
+
+TASK [Upload kickstart image file to device [Skip if no kick-start == 'none']] ****************************************************************************************************
+changed: [panther-n5k01]
+changed: [panther-n5k02]
+
+PLAY [Perfom image validation and impact checks] **********************************************************************************************************************************
+
+TASK [include_vars] ***************************************************************************************************************************************************************
+ok: [panther-n5k02]
+ok: [panther-n5k01]
+
+TASK [Impact checks for System Image ONLY [ Skipping if Kickstart Image is used ][ Fail if impact checks fail ]] ******************************************************************
+skipping: [panther-n5k01]
+skipping: [panther-n5k02]
+
+TASK [Check for any software incompatibilities] ***********************************************************************************************************************************
+skipping: [panther-n5k01]
+skipping: [panther-n5k02]
+
+TASK [debug] **********************************************************************************************************************************************************************
+skipping: [panther-n5k01]
+skipping: [panther-n5k02]
+
+TASK [Impact checks for System Image + Kickstart Image [ Skipping if Kickstart Image not used ][ Fail if impact checks fail ]] ****************************************************
+ok: [panther-n5k01]
+ok: [panther-n5k02]
+
+TASK [Check for any software incompatibilities] ***********************************************************************************************************************************
+ok: [panther-n5k01]
+ok: [panther-n5k02]
+
+TASK [debug] **********************************************************************************************************************************************************************
+ok: [panther-n5k01] => {
+    "msg": "Impact checks successfull. Device ready for Upgrade & reload"
+}
+ok: [panther-n5k02] => {
+    "msg": "Impact checks successfull. Device ready for Upgrade & reload"
+}
+
+PLAY RECAP ************************************************************************************************************************************************************************
+panther-n5k01       : ok=15   changed=2    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0
+panther-n5k02       : ok=15   changed=3    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0
+
+the_panther %
